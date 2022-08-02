@@ -22,7 +22,6 @@
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
 
-
   <!-- Limits app visibility in the Google Play Store to ARCore supported devices
        (https://developers.google.com/ar/devices). -->
   <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
@@ -52,10 +51,10 @@
 
     <meta-data
         android:name="com.google.android.ar.API_KEY"
-        android:value="@string/GoogleCloudApiKey"/>
+        android:value="AIzaSyACRyS9jHXHQ7bxi7nhEZfS8C_NbvLuLvk"/>
 
     <meta-data
         android:name="com.google.android.geo.API_KEY"
-        android:value="@string/GoogleCloudApiKey" />
+        android:value="AIzaSyACRyS9jHXHQ7bxi7nhEZfS8C_NbvLuLvk" />
   </application>
 </manifest>
