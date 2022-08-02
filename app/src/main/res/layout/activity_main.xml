@@ -25,6 +25,19 @@
         android:layout_height="fill_parent"
         android:layout_gravity="top" />
 
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal|top">
+
+        <TextView
+            android:padding="5dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/black"
+            android:text="Press on the map to place an anchor..." />
+    </LinearLayout>
+
     <com.google.ar.core.codelabs.hellogeospatial.helpers.MapTouchWrapper
         android:id="@+id/map_wrapper"
         android:layout_width="match_parent"
