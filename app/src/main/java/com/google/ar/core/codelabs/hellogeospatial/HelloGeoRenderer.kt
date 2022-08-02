@@ -35,7 +35,6 @@ import com.google.ar.core.examples.java.common.samplerender.arcore.BackgroundRen
 import com.google.ar.core.exceptions.CameraNotAvailableException
 import java.io.IOException
 
-
 class HelloGeoRenderer(val activity: HelloGeoActivity) :
     SampleRender.Renderer, DefaultLifecycleObserver {
     //<editor-fold desc="ARCore initialization" defaultstate="collapsed">
@@ -123,6 +122,9 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     }
     //</editor-fold>
 
+    /**
+     * Called when a frame needs to be drawn
+     */
     override fun onDrawFrame(render: SampleRender) {
         val session = session ?: return
 
@@ -195,7 +197,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         }
 
         // Draw the placed anchor, if it exists.
-        earthAnchor?.let {
+        earthAnchors.forEach {
             render.renderCompassAtAnchor(it)
         }
 
@@ -203,15 +205,18 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
     }
 
-    var earthAnchor: Anchor? = null
+    var earthAnchors: MutableList<Anchor> = mutableListOf()
 
     private fun onClearAnchorClick() {
-        earthAnchor?.detach()
-        earthAnchor = null
+        earthAnchors.forEach {
+            it.detach()
+        }
+
+        earthAnchors = mutableListOf()
 
         // Hide the marker
-        activity.view.mapView?.earthMarker?.apply {
-            isVisible = false
+        activity.view.mapView?.earthMarkers?.forEach {
+            it.isVisible = false
         }
 
         Toast.makeText(activity.applicationContext, "Ancore rimosse", Toast.LENGTH_SHORT).show()
@@ -222,7 +227,6 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
         if (earth.trackingState == TrackingState.TRACKING && earth.earthState == Earth.EarthState.ENABLED) {
             // All the necessary
-            earthAnchor?.detach()
             val altitude = earth.cameraGeospatialPose.altitude - 1
             val qx = 0f
             val qy = 0f
@@ -230,18 +234,19 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
             val qw = 1f
 
             // Create the anchor
-            earthAnchor =
+            earthAnchors.add(
                 earth.createAnchor(latLng.latitude, latLng.longitude, altitude, qx, qy, qz, qw)
+            )
 
             // Show a toast
             Toast.makeText(activity.applicationContext, "Ancora piazzata", Toast.LENGTH_SHORT)
                 .show()
 
             // Place the marker on the map
-            activity.view.mapView?.earthMarker?.apply {
-                position = latLng
-                isVisible = true
-            }
+            val mapView = activity.view.mapView ?: return
+
+            // Add the marker
+            mapView.earthMarkers.add(mapView.addEarthMarker(latLng))
         }
     }
 
