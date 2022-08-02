@@ -82,6 +82,11 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         // Prepare the rendering objects.
         // This involves reading shaders and 3D model files, so may throw an IOException.
         try {
+            // Attach button listeners
+            activity.view.clearAnchorBtn.setOnClickListener {
+                onClearAnchorClick()
+            }
+
             backgroundRenderer = BackgroundRenderer(render)
             virtualSceneFramebuffer = Framebuffer(render, /*width=*/ 1, /*height=*/ 1)
 
@@ -199,6 +204,18 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     }
 
     var earthAnchor: Anchor? = null
+
+    private fun onClearAnchorClick() {
+        earthAnchor?.detach()
+        earthAnchor = null
+
+        // Hide the marker
+        activity.view.mapView?.earthMarker?.apply {
+            isVisible = false
+        }
+
+        Toast.makeText(activity.applicationContext, "Ancore rimosse", Toast.LENGTH_SHORT).show()
+    }
 
     fun onMapClick(latLng: LatLng) {
         val earth = session?.earth ?: return
