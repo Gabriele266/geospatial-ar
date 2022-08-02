@@ -119,9 +119,10 @@ class MapView(val activity: HelloGeoActivity, val googleMap: GoogleMap) {
     /**
      * Create and add a new heart marker
      */
-    fun addEarthMarker(position: LatLng): Marker {
+    fun addEarthMarker(position: LatLng, visible: Boolean = true): Marker {
         val initial = createMarker(EARTH_MARKER_COLOR)
         initial.position = position
+        initial.isVisible = visible
 
         earthMarkers.add(initial)
         return initial
