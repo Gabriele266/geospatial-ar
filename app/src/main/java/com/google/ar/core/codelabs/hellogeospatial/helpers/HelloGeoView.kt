@@ -33,6 +33,7 @@ import com.google.ar.core.examples.java.common.helpers.SnackbarHelper
 class HelloGeoView(val activity: HelloGeoActivity) : DefaultLifecycleObserver {
     val root = View.inflate(activity, R.layout.activity_main, null)
     val surfaceView = root.findViewById<GLSurfaceView>(R.id.surfaceview)
+    val anchorCounter: TextView = root.findViewById(R.id.anchorCounter)
 
     val session
         get() = activity.arCoreSessionHelper.session
@@ -54,6 +55,10 @@ class HelloGeoView(val activity: HelloGeoActivity) : DefaultLifecycleObserver {
         }
 
     val statusText = root.findViewById<TextView>(R.id.statusText)
+
+    /**
+     * Updates the status text for the view
+     */
     fun updateStatusText(earth: Earth, cameraGeospatialPose: GeospatialPose?) {
         activity.runOnUiThread {
             val poseText = if (cameraGeospatialPose == null) "" else
@@ -73,6 +78,20 @@ class HelloGeoView(val activity: HelloGeoActivity) : DefaultLifecycleObserver {
                 earth.trackingState.toString(),
                 poseText
             )
+        }
+    }
+
+    /**
+     * Updates the anchor counter text indicator
+     * @param value Number of anchors set
+     */
+    fun updateAnchorCounter(value: Int) {
+        activity.runOnUiThread {
+            var text = "No anchors"
+            if (value > 0)
+                text = "$value Anchors"
+
+            anchorCounter.text = text
         }
     }
 

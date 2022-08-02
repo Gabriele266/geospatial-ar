@@ -189,11 +189,15 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         if (earth != null && earth.trackingState == TrackingState.TRACKING) {
             // We have got the earth
             val cameraPose = earth.cameraGeospatialPose
+            // Update map position
             activity.view.mapView?.updateMapPosition(
                 latitude = cameraPose.latitude,
                 longitude = cameraPose.longitude,
                 heading = cameraPose.heading
             )
+
+            // Update status text
+            activity.view.updateStatusText(earth, null)
         }
 
         // Draw the placed anchor, if it exists.
@@ -207,6 +211,9 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
     var earthAnchors: MutableList<Anchor> = mutableListOf()
 
+    /**
+     * Called when the clear anchor is required
+     */
     private fun onClearAnchorClick() {
         earthAnchors.forEach {
             it.detach()
@@ -218,6 +225,8 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         activity.view.mapView?.earthMarkers?.forEach {
             it.isVisible = false
         }
+
+        activity.view.updateAnchorCounter(earthAnchors.size)
 
         Toast.makeText(activity.applicationContext, "Ancore rimosse", Toast.LENGTH_SHORT).show()
     }
@@ -247,6 +256,9 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
             // Add the marker
             mapView.earthMarkers.add(mapView.addEarthMarker(latLng))
+
+            // Update counter
+            activity.view.updateAnchorCounter(earthAnchors.size)
         }
     }
 
