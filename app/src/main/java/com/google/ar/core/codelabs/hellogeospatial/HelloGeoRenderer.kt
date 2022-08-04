@@ -24,6 +24,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.ar.core.Anchor
 import com.google.ar.core.Earth
 import com.google.ar.core.TrackingState
+import com.google.ar.core.codelabs.hellogeospatial.persistence.GeoAnchor
 import com.google.ar.core.examples.java.common.helpers.DisplayRotationHelper
 import com.google.ar.core.examples.java.common.helpers.TrackingStateHelper
 import com.google.ar.core.examples.java.common.samplerender.Framebuffer
@@ -256,6 +257,56 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
             // Add the marker
             mapView.earthMarkers.add(mapView.addEarthMarker(latLng))
+
+            // Update counter
+            activity.view.updateAnchorCounter(earthAnchors.size)
+        }
+    }
+
+    /**
+     * Execute a function only if the api are tracking all the necessary
+     */
+    fun geospatialAware(work: (earth: Earth) -> Unit) {
+        val earth = session?.earth ?: return
+
+        if (earth.trackingState == TrackingState.TRACKING && earth.earthState == Earth.EarthState.ENABLED) {
+            // All the necessary to run the work
+            work(earth)
+        }
+    }
+
+    /**
+     * Add an anchor to the renderer
+     */
+    fun addAnchor(anchor: GeoAnchor) {
+        geospatialAware {
+            val rotation = anchor.rotation
+
+            // Add the anchor
+            earthAnchors.add(
+                it.createAnchor(
+                    anchor.latitude,
+                    anchor.longitude,
+                    anchor.altitude,
+                    rotation[0],
+                    rotation[1],
+                    rotation[2],
+                    rotation[3]
+                )
+            )
+
+            // Place the marker on the map
+            val mapView = activity.view.mapView ?: return@geospatialAware
+
+            // Add the marker
+            mapView.earthMarkers.add(
+                mapView.addEarthMarker(
+                    LatLng(
+                        anchor.latitude,
+                        anchor.longitude
+                    )
+                )
+            )
 
             // Update counter
             activity.view.updateAnchorCounter(earthAnchors.size)

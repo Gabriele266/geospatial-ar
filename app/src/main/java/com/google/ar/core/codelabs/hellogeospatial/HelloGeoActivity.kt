@@ -24,6 +24,7 @@ import com.google.ar.core.Session
 import com.google.ar.core.codelabs.hellogeospatial.helpers.ARCoreSessionLifecycleHelper
 import com.google.ar.core.codelabs.hellogeospatial.helpers.GeoPermissionsHelper
 import com.google.ar.core.codelabs.hellogeospatial.helpers.HelloGeoView
+import com.google.ar.core.codelabs.hellogeospatial.persistence.GeoAnchor
 import com.google.ar.core.examples.java.common.helpers.FullScreenHelper
 import com.google.ar.core.examples.java.common.samplerender.SampleRender
 import com.google.ar.core.exceptions.CameraNotAvailableException
@@ -31,85 +32,115 @@ import com.google.ar.core.exceptions.UnavailableApkTooOldException
 import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
 import com.google.ar.core.exceptions.UnavailableSdkTooOldException
 import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
+import kotlinx.serialization.decodeFromString
+import kotlinx.serialization.json.Json
+import java.io.File
+import java.io.IOError
+import java.io.IOException
+import kotlin.math.log
 
 class HelloGeoActivity : AppCompatActivity() {
-  companion object {
-    private const val TAG = "HelloGeoActivity"
-  }
-
-  lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
-  lateinit var view: HelloGeoView
-  lateinit var renderer: HelloGeoRenderer
-
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-
-    // Setup ARCore session lifecycle helper and configuration.
-    arCoreSessionHelper = ARCoreSessionLifecycleHelper(this)
-    // If Session creation or Session.resume() fails, display a message and log detailed
-    // information.
-    arCoreSessionHelper.exceptionCallback =
-      { exception ->
-        val message =
-          when (exception) {
-            is UnavailableUserDeclinedInstallationException ->
-              "Please install Google Play Services for AR"
-            is UnavailableApkTooOldException -> "Please update ARCore"
-            is UnavailableSdkTooOldException -> "Please update this app"
-            is UnavailableDeviceNotCompatibleException -> "This device does not support AR"
-            is CameraNotAvailableException -> "Camera not available. Try restarting the app."
-            else -> "Failed to create AR session: $exception"
-          }
-        Log.e(TAG, "ARCore threw an exception", exception)
-        view.snackbarHelper.showError(this, message)
-      }
-
-    // Configure session features.
-    arCoreSessionHelper.beforeSessionResume = ::configureSession
-    lifecycle.addObserver(arCoreSessionHelper)
-
-    // Set up the Hello AR renderer.
-    renderer = HelloGeoRenderer(this)
-    lifecycle.addObserver(renderer)
-
-    // Set up Hello AR UI.
-    view = HelloGeoView(this)
-    lifecycle.addObserver(view)
-    setContentView(view.root)
-
-    // Sets up an example renderer using our HelloGeoRenderer.
-    SampleRender(view.surfaceView, renderer, assets)
-  }
-
-  // Configure the session, setting the desired options according to your usecase.
-  fun configureSession(session: Session) {
-    session.configure(
-      session.config.apply {
-        geospatialMode = Config.GeospatialMode.ENABLED
-      }
-    )
-  }
-
-  override fun onRequestPermissionsResult(
-    requestCode: Int,
-    permissions: Array<String>,
-    results: IntArray
-  ) {
-    super.onRequestPermissionsResult(requestCode, permissions, results)
-    if (!GeoPermissionsHelper.hasGeoPermissions(this)) {
-      // Use toast instead of snackbar here since the activity will exit.
-      Toast.makeText(this, "Camera and location permissions are needed to run this application", Toast.LENGTH_LONG)
-        .show()
-      if (!GeoPermissionsHelper.shouldShowRequestPermissionRationale(this)) {
-        // Permission denied with checking "Do not ask again".
-        GeoPermissionsHelper.launchPermissionSettings(this)
-      }
-      finish()
+    companion object {
+        private const val TAG = "HelloGeoActivity"
+        private const val FILE_NAME = "anchors.adb"
     }
-  }
 
-  override fun onWindowFocusChanged(hasFocus: Boolean) {
-    super.onWindowFocusChanged(hasFocus)
-    FullScreenHelper.setFullScreenOnWindowFocusChanged(this, hasFocus)
-  }
+    lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
+    lateinit var view: HelloGeoView
+    lateinit var renderer: HelloGeoRenderer
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        // Setup ARCore session lifecycle helper and configuration.
+        arCoreSessionHelper = ARCoreSessionLifecycleHelper(this)
+        // If Session creation or Session.resume() fails, display a message and log detailed
+        // information.
+        arCoreSessionHelper.exceptionCallback =
+            { exception ->
+                val message =
+                    when (exception) {
+                        is UnavailableUserDeclinedInstallationException ->
+                            "Please install Google Play Services for AR"
+                        is UnavailableApkTooOldException -> "Please update ARCore"
+                        is UnavailableSdkTooOldException -> "Please update this app"
+                        is UnavailableDeviceNotCompatibleException -> "This device does not support AR"
+                        is CameraNotAvailableException -> "Camera not available. Try restarting the app."
+                        else -> "Failed to create AR session: $exception"
+                    }
+                Log.e(TAG, "ARCore threw an exception", exception)
+                view.snackbarHelper.showError(this, message)
+            }
+
+        // Configure session features.
+        arCoreSessionHelper.beforeSessionResume = ::configureSession
+        lifecycle.addObserver(arCoreSessionHelper)
+
+        // Set up the Hello AR renderer.
+        renderer = HelloGeoRenderer(this)
+
+        // Load anchors from the file
+        try {
+            val file = File(applicationContext.filesDir, FILE_NAME)
+
+            val text = file.readText()
+            val anchors = Json.decodeFromString<List<GeoAnchor>>(text)
+
+            println("Loaded anchors: $anchors")
+
+            // Add all anchors
+            anchors.forEach {
+                renderer.addAnchor(it)
+            }
+        } catch (e: IOException) {
+
+        }
+
+
+        lifecycle.addObserver(renderer)
+
+        // Set up Hello AR UI.
+        view = HelloGeoView(this)
+        lifecycle.addObserver(view)
+        setContentView(view.root)
+
+        // Sets up an example renderer using our HelloGeoRenderer.
+        SampleRender(view.surfaceView, renderer, assets)
+    }
+
+    // Configure the session, setting the desired options according to your usecase.
+    fun configureSession(session: Session) {
+        session.configure(
+            session.config.apply {
+                geospatialMode = Config.GeospatialMode.ENABLED
+            }
+        )
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        results: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, results)
+        if (!GeoPermissionsHelper.hasGeoPermissions(this)) {
+            // Use toast instead of snackbar here since the activity will exit.
+            Toast.makeText(
+                this,
+                "Camera and location permissions are needed to run this application",
+                Toast.LENGTH_LONG
+            )
+                .show()
+            if (!GeoPermissionsHelper.shouldShowRequestPermissionRationale(this)) {
+                // Permission denied with checking "Do not ask again".
+                GeoPermissionsHelper.launchPermissionSettings(this)
+            }
+            finish()
+        }
+    }
+
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        FullScreenHelper.setFullScreenOnWindowFocusChanged(this, hasFocus)
+    }
 }

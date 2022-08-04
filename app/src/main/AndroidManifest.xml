@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!--
+<?xml version="1.0" encoding="utf-8"?><!--
    Copyright 2022 Google LLC
 
    Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,43 +17,51 @@
     xmlns:tools="http://schemas.android.com/tools"
     package="com.google.ar.core.codelabs.hellogeospatial">
 
-  <uses-permission android:name="android.permission.CAMERA"/>
-  <uses-permission android:name="android.permission.INTERNET"/>
-  <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
 
-  <!-- Limits app visibility in the Google Play Store to ARCore supported devices
-       (https://developers.google.com/ar/devices). -->
-  <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
-  <uses-feature android:glEsVersion="0x00020000" android:required="true" />
+    <!-- Limits app visibility in the Google Play Store to ARCore supported devices
+         (https://developers.google.com/ar/devices). -->
+    <uses-feature
+        android:name="android.hardware.camera.ar"
+        android:required="true" />
+    <uses-feature
+        android:glEsVersion="0x00020000"
+        android:required="true" />
 
-  <application
-      android:allowBackup="false"
-      android:icon="@drawable/ic_launcher"
-      android:label="@string/app_name"
-      android:theme="@style/AppTheme"
-      android:usesCleartextTraffic="false"
-      tools:ignore="GoogleAppIndexingWarning">
+    <application
+        android:allowBackup="false"
+        android:icon="@drawable/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="false"
+        tools:ignore="GoogleAppIndexingWarning">
 
-    <activity
-        android:name=".HelloGeoActivity"
-        android:configChanges="orientation|screenSize"
-        android:exported="true"
-        android:theme="@style/Theme.AppCompat.NoActionBar"
-        android:screenOrientation="locked">
-      <intent-filter>
-        <action android:name="android.intent.action.MAIN"/>
-        <category android:name="android.intent.category.LAUNCHER"/>
-      </intent-filter>
-    </activity>
-    <!-- Indicates whether "Google Play Services for AR" (ARCore) is "required" or "optional". -->
-    <meta-data android:name="com.google.ar.core" android:value="required" />
+        <activity
+            android:name=".HelloGeoActivity"
+            android:configChanges="orientation|screenSize"
+            android:exported="true"
+            android:screenOrientation="locked"
+            android:theme="@style/Theme.AppCompat.NoActionBar">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <!-- Indicates whether "Google Play Services for AR" (ARCore) is "required" or "optional". -->
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="required" />
 
-    <meta-data
-        android:name="com.google.android.ar.API_KEY"
-        android:value="AIzaSyACRyS9jHXHQ7bxi7nhEZfS8C_NbvLuLvk"/>
+        <meta-data
+            android:name="com.google.android.ar.API_KEY"
+            android:value="AIzaSyACRyS9jHXHQ7bxi7nhEZfS8C_NbvLuLvk" />
 
-    <meta-data
-        android:name="com.google.android.geo.API_KEY"
-        android:value="AIzaSyACRyS9jHXHQ7bxi7nhEZfS8C_NbvLuLvk" />
-  </application>
+        <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyACRyS9jHXHQ7bxi7nhEZfS8C_NbvLuLvk" />
+    </application>
 </manifest>
