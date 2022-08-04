@@ -8,7 +8,7 @@ internal class GeoAnchorSerializerTest {
     fun serializeOne() {
         val serializer = GeoAnchorSerializer()
         val anchor = GeoAnchor("23", "My resource")
-        anchor.setPosition(23, 34, 32, floatArrayOf(3f, 4f, 2f, 1f))
+        anchor.setPosition(23.0, 34.0, 32.0, floatArrayOf(3f, 4f, 2f, 1f))
         val result = serializer.serializeOne(anchor)
         assert(result.isNotEmpty())
         assert(result.contains("resourceId"))

@@ -25,6 +25,7 @@ import com.google.ar.core.Anchor
 import com.google.ar.core.Earth
 import com.google.ar.core.TrackingState
 import com.google.ar.core.codelabs.hellogeospatial.persistence.GeoAnchor
+import com.google.ar.core.codelabs.hellogeospatial.persistence.serialization.AnchorStore
 import com.google.ar.core.examples.java.common.helpers.DisplayRotationHelper
 import com.google.ar.core.examples.java.common.helpers.TrackingStateHelper
 import com.google.ar.core.examples.java.common.samplerender.Framebuffer
@@ -44,6 +45,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
         private val Z_NEAR = 0.1f
         private val Z_FAR = 1000f
+        const val FILE_NAME = "anchors.adb"
     }
 
     lateinit var backgroundRenderer: BackgroundRenderer
@@ -68,6 +70,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
     val displayRotationHelper = DisplayRotationHelper(activity)
     val trackingStateHelper = TrackingStateHelper(activity)
+    var loaded = false
 
     override fun onResume(owner: LifecycleOwner) {
         displayRotationHelper.onResume()
@@ -111,6 +114,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
             backgroundRenderer.setUseDepthVisualization(render, false)
             backgroundRenderer.setUseOcclusion(render, false)
+
         } catch (e: IOException) {
             Log.e(TAG, "Failed to read a required asset file", e)
             showError("Failed to read a required asset file: $e")
@@ -122,6 +126,10 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         virtualSceneFramebuffer.resize(width, height)
     }
     //</editor-fold>
+
+    var earthAnchors: MutableList<Anchor> = mutableListOf()
+    private val anchorStore: AnchorStore =
+        AnchorStore("${activity.applicationContext.filesDir}/$FILE_NAME")
 
     /**
      * Called when a frame needs to be drawn
@@ -188,6 +196,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
         val earth = session.earth
         if (earth != null && earth.trackingState == TrackingState.TRACKING) {
+
             // We have got the earth
             val cameraPose = earth.cameraGeospatialPose
             // Update map position
@@ -196,6 +205,11 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
                 longitude = cameraPose.longitude,
                 heading = cameraPose.heading
             )
+
+            if(!loaded) {
+                loadSavedAnchors()
+                loaded = true
+            }
 
             // Update status text
             activity.view.updateStatusText(earth, null)
@@ -210,7 +224,23 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         backgroundRenderer.drawVirtualScene(render, virtualSceneFramebuffer, Z_NEAR, Z_FAR)
     }
 
-    var earthAnchors: MutableList<Anchor> = mutableListOf()
+    /**
+     * Load all saved anchors
+     */
+    private fun loadSavedAnchors() {
+        // Load anchors from the file
+        try {
+            val anchors = anchorStore.loadContent()
+            println("Loaded anchors: $anchors")
+
+            // Add all anchors
+            anchors.forEach {
+                addAnchor(it)
+            }
+        } catch (e: Exception) {
+            println("Unable to load anchors $e")
+        }
+    }
 
     /**
      * Called when the clear anchor is required
@@ -230,6 +260,8 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         activity.view.updateAnchorCounter(earthAnchors.size)
 
         Toast.makeText(activity.applicationContext, "Ancore rimosse", Toast.LENGTH_SHORT).show()
+
+        anchorStore.clearStore()
     }
 
     fun onMapClick(latLng: LatLng) {
@@ -244,6 +276,14 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
             val qw = 1f
 
             // Create the anchor
+            val anchorData = GeoAnchor("23", "Name")
+            anchorData.setPosition(
+                latLng.latitude,
+                latLng.longitude,
+                altitude,
+                floatArrayOf(qx, qy, qz, qw)
+            )
+
             earthAnchors.add(
                 earth.createAnchor(latLng.latitude, latLng.longitude, altitude, qx, qy, qz, qw)
             )
@@ -260,6 +300,8 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
             // Update counter
             activity.view.updateAnchorCounter(earthAnchors.size)
+
+            anchorStore.appendToStore(listOf(anchorData))
         }
     }
 
@@ -278,7 +320,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     /**
      * Add an anchor to the renderer
      */
-    fun addAnchor(anchor: GeoAnchor) {
+    private fun addAnchor(anchor: GeoAnchor) {
         geospatialAware {
             val rotation = anchor.rotation
 
@@ -299,17 +341,19 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
             val mapView = activity.view.mapView ?: return@geospatialAware
 
             // Add the marker
-            mapView.earthMarkers.add(
-                mapView.addEarthMarker(
-                    LatLng(
-                        anchor.latitude,
-                        anchor.longitude
+            activity.runOnUiThread {
+                mapView.earthMarkers.add(
+                    mapView.addEarthMarker(
+                        LatLng(
+                            anchor.latitude,
+                            anchor.longitude
+                        )
                     )
                 )
-            )
 
-            // Update counter
-            activity.view.updateAnchorCounter(earthAnchors.size)
+                // Update counter
+                activity.view.updateAnchorCounter(earthAnchors.size)
+            }
         }
     }
 

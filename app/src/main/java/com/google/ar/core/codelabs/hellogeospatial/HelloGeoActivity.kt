@@ -25,6 +25,7 @@ import com.google.ar.core.codelabs.hellogeospatial.helpers.ARCoreSessionLifecycl
 import com.google.ar.core.codelabs.hellogeospatial.helpers.GeoPermissionsHelper
 import com.google.ar.core.codelabs.hellogeospatial.helpers.HelloGeoView
 import com.google.ar.core.codelabs.hellogeospatial.persistence.GeoAnchor
+import com.google.ar.core.codelabs.hellogeospatial.persistence.serialization.AnchorStore
 import com.google.ar.core.examples.java.common.helpers.FullScreenHelper
 import com.google.ar.core.examples.java.common.samplerender.SampleRender
 import com.google.ar.core.exceptions.CameraNotAvailableException
@@ -42,7 +43,6 @@ import kotlin.math.log
 class HelloGeoActivity : AppCompatActivity() {
     companion object {
         private const val TAG = "HelloGeoActivity"
-        private const val FILE_NAME = "anchors.adb"
     }
 
     lateinit var arCoreSessionHelper: ARCoreSessionLifecycleHelper
@@ -78,24 +78,6 @@ class HelloGeoActivity : AppCompatActivity() {
 
         // Set up the Hello AR renderer.
         renderer = HelloGeoRenderer(this)
-
-        // Load anchors from the file
-        try {
-            val file = File(applicationContext.filesDir, FILE_NAME)
-
-            val text = file.readText()
-            val anchors = Json.decodeFromString<List<GeoAnchor>>(text)
-
-            println("Loaded anchors: $anchors")
-
-            // Add all anchors
-            anchors.forEach {
-                renderer.addAnchor(it)
-            }
-        } catch (e: IOException) {
-
-        }
-
 
         lifecycle.addObserver(renderer)
 

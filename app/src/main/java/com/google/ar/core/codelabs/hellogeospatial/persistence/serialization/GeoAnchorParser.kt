@@ -5,10 +5,7 @@ import com.google.ar.core.codelabs.hellogeospatial.persistence.serialization.com
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
-class GeoAnchorParser : StringParser<GeoAnchor> {
-    override fun parseMore(input: List<String>): List<GeoAnchor> =
-        input.map { parseOne(it) }
-
-    override fun parseOne(input: String): GeoAnchor =
-        Json.decodeFromString(input)
+class GeoAnchorParser {
+    fun parseMore(input: String): List<GeoAnchor> =
+        Json.decodeFromString<List<GeoAnchor>>(input)
 }
