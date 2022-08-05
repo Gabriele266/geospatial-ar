@@ -21,6 +21,7 @@ import android.widget.Toast
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.LatLngBounds
 import com.google.ar.core.Anchor
 import com.google.ar.core.Earth
 import com.google.ar.core.TrackingState
@@ -130,6 +131,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     var earthAnchors: MutableList<Anchor> = mutableListOf()
     private val anchorStore: AnchorStore =
         AnchorStore("${activity.applicationContext.filesDir}/$FILE_NAME")
+    private var initialized = false
 
     /**
      * Called when a frame needs to be drawn
@@ -194,11 +196,9 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         render.clear(virtualSceneFramebuffer, 0f, 0f, 0f, 0f)
         //</editor-fold>
 
-        val earth = session.earth
-        if (earth != null && earth.trackingState == TrackingState.TRACKING) {
-
+        geospatialAware {
             // We have got the earth
-            val cameraPose = earth.cameraGeospatialPose
+            val cameraPose = it.cameraGeospatialPose
             // Update map position
             activity.view.mapView?.updateMapPosition(
                 latitude = cameraPose.latitude,
@@ -206,13 +206,14 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
                 heading = cameraPose.heading
             )
 
-            if(!loaded) {
-                loadSavedAnchors()
-                loaded = true
-            }
-
             // Update status text
-            activity.view.updateStatusText(earth, null)
+            activity.view.updateStatusText(it, null)
+
+            // Initialize data if already not done
+            if(!initialized) {
+                onCreated()
+                initialized = true
+            }
         }
 
         // Draw the placed anchor, if it exists.
@@ -225,22 +226,32 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     }
 
     /**
-     * Load all saved anchors
+     * Called when the renderer is created and needs initialization
      */
-    private fun loadSavedAnchors() {
-        // Load anchors from the file
-        try {
-            val anchors = anchorStore.loadContent()
-            println("Loaded anchors: $anchors")
+    private fun onCreated() {
+        // Load anchors into memory
+        println("Load anchors")
+        val anchors = loadSavedAnchors()
 
-            // Add all anchors
+        geospatialAware { heart ->
             anchors.forEach {
                 addAnchor(it)
             }
-        } catch (e: Exception) {
-            println("Unable to load anchors $e")
         }
     }
+
+    /**
+     * Load all saved anchors
+     */
+    private fun loadSavedAnchors(): List<GeoAnchor> =
+        try {
+            val anchors = anchorStore.loadContent()
+            Log.i(null, "Loaded ${anchors.size} anchors")
+            anchors
+        } catch (e: Exception) {
+            println("Unable to load anchors $e")
+            listOf()
+        }
 
     /**
      * Called when the clear anchor is required
@@ -252,14 +263,10 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
         earthAnchors = mutableListOf()
 
-        // Hide the marker
-        activity.view.mapView?.earthMarkers?.forEach {
-            it.isVisible = false
+        activity.runOnUiThread {
+            activity.view.updateAnchorCounter(earthAnchors.size)
+            Toast.makeText(activity.applicationContext, "Ancore rimosse", Toast.LENGTH_SHORT).show()
         }
-
-        activity.view.updateAnchorCounter(earthAnchors.size)
-
-        Toast.makeText(activity.applicationContext, "Ancore rimosse", Toast.LENGTH_SHORT).show()
 
         anchorStore.clearStore()
     }
@@ -270,7 +277,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     fun onMapClick(latLng: LatLng) {
         val earth = session?.earth ?: return
 
-        if (earth.trackingState == TrackingState.TRACKING && earth.earthState == Earth.EarthState.ENABLED) {
+        geospatialAware {
             // All the necessary
             val altitude = earth.cameraGeospatialPose.altitude - 1
             val qx = 0f
@@ -287,24 +294,12 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
                 floatArrayOf(qx, qy, qz, qw)
             )
 
-            earthAnchors.add(
-                earth.createAnchor(latLng.latitude, latLng.longitude, altitude, qx, qy, qz, qw)
-            )
+            // Effectively add the anchor
+            addAnchor(anchorData, true)
 
             // Show a toast
             Toast.makeText(activity.applicationContext, "Ancora piazzata", Toast.LENGTH_SHORT)
                 .show()
-
-            // Place the marker on the map
-            val mapView = activity.view.mapView ?: return
-
-            // Add the marker
-            mapView.earthMarkers.add(mapView.addEarthMarker(latLng))
-
-            // Update counter
-            activity.view.updateAnchorCounter(earthAnchors.size)
-
-            anchorStore.appendToStore(listOf(anchorData))
         }
     }
 
@@ -323,39 +318,37 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
     /**
      * Add an anchor to the renderer
      */
-    private fun addAnchor(anchor: GeoAnchor) {
+    private fun addAnchor(anchor: GeoAnchor, persist: Boolean = false) {
         geospatialAware {
-            val rotation = anchor.rotation
-
-            // Add the anchor
+            println("Add anchor $anchor")
+            // Create the anchor and add it
             earthAnchors.add(
                 it.createAnchor(
                     anchor.latitude,
                     anchor.longitude,
                     anchor.altitude,
-                    rotation.first(),
-                    rotation[1],
-                    rotation[2],
-                    rotation.last()
+                    anchor.rotation
                 )
             )
 
-            // Place the marker on the map
-            val mapView = activity.view.mapView ?: return@geospatialAware
-
-            // Add the marker
+            // Update counter
             activity.runOnUiThread {
+                val mapView = activity.view.mapView ?: return@runOnUiThread
+
+                // Place the marker on the map
                 mapView.earthMarkers.add(
                     mapView.addEarthMarker(
-                        LatLng(
-                            anchor.latitude,
-                            anchor.longitude
-                        )
+                        LatLng(anchor.latitude, anchor.longitude)
                     )
                 )
 
-                // Update counter
+                // Update the counter
                 activity.view.updateAnchorCounter(earthAnchors.size)
+            }
+
+            // Persist if necessary
+            if (persist) {
+                anchorStore.appendToStore(listOf(anchor))
             }
         }
     }

@@ -1,6 +1,5 @@
 package com.google.ar.core.codelabs.hellogeospatial.persistence
 
-import com.google.android.gms.maps.model.LatLng
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -41,4 +40,7 @@ data class GeoAnchor(
 
     val dw: Float?
         get() = rotation.lastOrNull()
+
+    override fun toString(): String =
+        "Position: $latitude $longitude"
 }
