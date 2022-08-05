@@ -264,6 +264,9 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
         anchorStore.clearStore()
     }
 
+    /**
+     * Called when the map gets clicked to add a new anchor
+     */
     fun onMapClick(latLng: LatLng) {
         val earth = session?.earth ?: return
 
@@ -275,7 +278,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
             val qz = 0f
             val qw = 1f
 
-            // Create the anchor
+            // Create the GeoAnchor
             val anchorData = GeoAnchor("23", "Name")
             anchorData.setPosition(
                 latLng.latitude,
@@ -330,10 +333,10 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
                     anchor.latitude,
                     anchor.longitude,
                     anchor.altitude,
-                    rotation[0],
+                    rotation.first(),
                     rotation[1],
                     rotation[2],
-                    rotation[3]
+                    rotation.last()
                 )
             )
 

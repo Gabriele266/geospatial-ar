@@ -24,21 +24,9 @@ import com.google.ar.core.Session
 import com.google.ar.core.codelabs.hellogeospatial.helpers.ARCoreSessionLifecycleHelper
 import com.google.ar.core.codelabs.hellogeospatial.helpers.GeoPermissionsHelper
 import com.google.ar.core.codelabs.hellogeospatial.helpers.HelloGeoView
-import com.google.ar.core.codelabs.hellogeospatial.persistence.GeoAnchor
-import com.google.ar.core.codelabs.hellogeospatial.persistence.serialization.AnchorStore
 import com.google.ar.core.examples.java.common.helpers.FullScreenHelper
 import com.google.ar.core.examples.java.common.samplerender.SampleRender
-import com.google.ar.core.exceptions.CameraNotAvailableException
-import com.google.ar.core.exceptions.UnavailableApkTooOldException
-import com.google.ar.core.exceptions.UnavailableDeviceNotCompatibleException
-import com.google.ar.core.exceptions.UnavailableSdkTooOldException
-import com.google.ar.core.exceptions.UnavailableUserDeclinedInstallationException
-import kotlinx.serialization.decodeFromString
-import kotlinx.serialization.json.Json
-import java.io.File
-import java.io.IOError
-import java.io.IOException
-import kotlin.math.log
+import com.google.ar.core.exceptions.*
 
 class HelloGeoActivity : AppCompatActivity() {
     companion object {
