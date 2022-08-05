@@ -1,5 +1,6 @@
 package com.google.ar.core.codelabs.hellogeospatial.persistence
 
+import com.google.android.gms.maps.model.LatLng
 import kotlinx.serialization.Serializable
 
 @Serializable
@@ -16,8 +17,11 @@ data class GeoAnchor(
 
     /**
      * Set the position of this anchor
+     * @param l Latitude
+     * @param long Longitude
+     * @param a Altitude
      */
-    fun setPosition(l: Double, a: Double, long: Double, rt: FloatArray) {
+    fun setPosition(l: Double, long: Double, a: Double, rt: FloatArray) {
         apply {
             latitude = l
             altitude = a
