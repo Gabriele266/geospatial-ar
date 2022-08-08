@@ -128,8 +128,12 @@ class MapView(val activity: HelloGeoActivity, val googleMap: GoogleMap) {
         return initial
     }
 
+    /**
+     * Clears all the heart markers applied to the current map
+     */
     fun clearEarthMarkers() {
         earthMarkers.clear()
+        googleMap.clear()
     }
 
     fun removeEarthMarker(marker: Marker) {

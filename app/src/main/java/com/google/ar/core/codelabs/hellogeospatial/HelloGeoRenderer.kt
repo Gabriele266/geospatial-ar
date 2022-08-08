@@ -265,6 +265,7 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
 
         activity.runOnUiThread {
             activity.view.updateAnchorCounter(earthAnchors.size)
+            activity.view.mapView?.clearEarthMarkers()
             Toast.makeText(activity.applicationContext, "Ancore rimosse", Toast.LENGTH_SHORT).show()
         }
 
@@ -328,8 +329,8 @@ class HelloGeoRenderer(val activity: HelloGeoActivity) :
                     anchor.longitude,
                     anchor.altitude,
                     anchor.rotation
-                )
             )
+                )
 
             // Update counter
             activity.runOnUiThread {

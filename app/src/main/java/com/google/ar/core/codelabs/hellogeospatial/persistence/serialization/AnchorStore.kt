@@ -82,6 +82,5 @@ class AnchorStore(val filename: String) {
         }
 
         return@fileReadOperation listOf<GeoAnchor>()
-
     }
 }

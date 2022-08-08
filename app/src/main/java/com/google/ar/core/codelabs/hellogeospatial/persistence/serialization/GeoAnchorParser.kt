@@ -1,7 +1,6 @@
 package com.google.ar.core.codelabs.hellogeospatial.persistence.serialization
 
 import com.google.ar.core.codelabs.hellogeospatial.persistence.GeoAnchor
-import com.google.ar.core.codelabs.hellogeospatial.persistence.serialization.common.StringParser
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
